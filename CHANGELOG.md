@@ -1,39 +1,41 @@
-# Changelog
+# 更新日志
 
-All notable changes to this project are documented in this file.
+本文档用于记录项目的重要迭代与阶段性交付内容。
 
-## [2026-04-21] Phase 1 Delivery
+## [2026-04-21] 第一期功能交付
 
-### Added
+### 新增
 
-- Added file upload support for cat avatars and drink images.
-- Added a storage abstraction layer with a local storage implementation, making it easier to switch to OSS, MinIO, or other object storage providers later.
-- Added static resource mapping for uploaded files so uploaded images can be previewed directly in the UI.
-- Added user ownership fields for reservations and orders, enabling user-scoped data isolation.
-- Added automatic schema upgrade logic for `reservation.user_id` and `customer_order.user_id` to smooth local database upgrades.
-- Added ECharts-based visual analytics to the dashboard, including 7-day revenue trend and order status distribution.
-- Added login page brand logo and favicon integration.
-- Added a project-level `CHANGELOG.md` for structured release tracking.
+- 新增猫咪头像与饮品图片上传能力。
+- 新增文件存储抽象层，并提供本地存储实现，为后续切换阿里云 OSS、MinIO、腾讯云 COS 等对象存储预留扩展位。
+- 新增上传文件静态资源映射，支持前端直接预览上传后的图片。
+- 新增预约与订单的用户归属字段，实现普通用户数据隔离。
+- 新增数据库自动升级逻辑，可自动补齐 `reservation.user_id` 与 `customer_order.user_id` 字段及索引。
+- 新增基于 ECharts 的经营分析图表，包括近 7 天营收趋势与订单状态分布。
+- 新增登录页品牌 Logo 与浏览器标签页 favicon。
+- 新增项目级 `CHANGELOG.md`，用于版本变更追踪。
 
-### Changed
+### 优化
 
-- Refined the login page visual identity with the Cat Cafe logo, brand subtitle, and improved login/register presentation.
-- Reworked the sidebar brand area to use the custom Cat Cafe logo instead of the previous text-only block.
-- Updated sidebar interaction states so active and hover states share a consistent rounded visual style.
-- Moved `修改密码` into the bottom action zone above `退出登录` for a cleaner sidebar information hierarchy.
-- Updated customer-facing labels so normal users see `我的预约` and `我的订单` instead of management-oriented wording.
-- Adjusted reservation and order forms for normal users to hide unnecessary back-office fields such as status-management inputs.
-- Unified several button and layout interactions across the frontend for a more coherent visual language.
+- 优化登录页视觉层级，加入品牌 Logo、品牌副标题，并重构登录 / 注册切换区域样式。
+- 优化侧边栏品牌区，使用自定义猫咖 Logo 替代原有文字占位块。
+- 优化侧边栏菜单交互，统一悬停态与选中态的圆角视觉风格。
+- 优化侧边栏底部操作区，将“修改密码”调整到“退出登录”上方。
+- 优化普通用户菜单文案，将后台语义改为“我的预约”“我的订单”等前台视角表达。
+- 优化普通用户预约与下单表单，隐藏不必要的后台管理字段。
+- 优化前端按钮、抽屉表单、品牌展示与局部交互样式，提升整体一致性。
+- 优化 README 展示截图，更新为当前版本最新界面效果。
 
-### Fixed
+### 修复
 
-- Fixed image upload preview failures caused by incorrect static resource mapping for uploaded files.
-- Fixed upload request handling to avoid unstable multipart header behavior in the frontend.
-- Fixed permission-scoped reservation and order queries so normal users only see and operate on their own records.
-- Fixed role-based data presentation issues by ensuring seeded sample data is bound to the normal user account where appropriate.
-- Fixed sidebar UX inconsistencies where hover and selected menu items used mismatched shapes.
+- 修复上传图片后前端预览 `FAILED` 的问题，原因是静态资源映射路径未正确生效。
+- 修复前端上传请求头处理不稳定的问题，改为交由浏览器自动生成 multipart 边界信息。
+- 修复普通用户仍可看到非本人预约与订单的问题，接口层已改为按当前登录用户过滤。
+- 修复初始化数据未正确绑定普通用户导致“我的预约 / 我的订单”为空的问题。
+- 修复侧边栏悬停态与选中态形状不一致的问题。
+- 修复 Logo 显示中的白底与裁切问题，改为透明底展示与更自然的投影效果。
 
-### Notes
+### 说明
 
-- Uploaded files are runtime assets and are now excluded from Git tracking via `.gitignore`.
-- The current local storage implementation is suitable for development, demos, course projects, and graduation project delivery. For production deployment, the storage interface can be switched to a dedicated object storage provider.
+- `backend/uploads/` 为运行时上传目录，现已通过 `.gitignore` 排除，不再进入版本库。
+- 当前本地存储实现适合课程设计、毕业设计、本地演示与原型交付；如果后续需要部署上线，可直接基于现有接口切换为正式对象存储方案。

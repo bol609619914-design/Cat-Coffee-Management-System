@@ -16,17 +16,21 @@
 
 ## Preview
 
-### 登录 / 注册页
+### 登录页
 
-![登录页](docs/screenshots/login-page.png)
+![登录页](docs/screenshots/preview-login.png)
 
-### 系统管理页
+### 经营看板
 
-![用户管理页](docs/screenshots/system-users.png)
+![经营看板](docs/screenshots/preview-dashboard.png)
 
-### 业务模块页
+### 猫咪管理
 
-![猫咪管理页](docs/screenshots/cat-module.png)
+![猫咪管理](docs/screenshots/preview-cats.png)
+
+### 我的预约
+
+![我的预约](docs/screenshots/preview-reservations.png)
 
 ## Business Modules
 
