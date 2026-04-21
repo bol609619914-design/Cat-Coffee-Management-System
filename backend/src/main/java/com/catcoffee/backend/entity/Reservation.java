@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @TableName("reservation")
 public class Reservation extends BaseEntity {
 
+    private Long userId;
     private String customerName;
     private String customerPhone;
     private Integer guestCount;

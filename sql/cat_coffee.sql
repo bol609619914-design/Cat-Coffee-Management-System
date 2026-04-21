@@ -61,6 +61,7 @@ CREATE TABLE cafe_table (
 
 CREATE TABLE reservation (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT,
     customer_name VARCHAR(50) NOT NULL,
     customer_phone VARCHAR(20) NOT NULL,
     guest_count INT NOT NULL,
@@ -71,12 +72,14 @@ CREATE TABLE reservation (
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted TINYINT DEFAULT 0,
+    KEY idx_reservation_user_id (user_id),
     KEY idx_reservation_time (reservation_time),
     KEY idx_table_id (table_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE customer_order (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT,
     order_no VARCHAR(30) NOT NULL,
     customer_name VARCHAR(50) NOT NULL,
     reservation_id BIGINT,
@@ -89,6 +92,7 @@ CREATE TABLE customer_order (
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted TINYINT DEFAULT 0,
     UNIQUE KEY uk_order_no (order_no),
+    KEY idx_order_user_id (user_id),
     KEY idx_table_order (table_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -184,15 +188,15 @@ VALUES
 ('B1', 2, '安静区', '空闲', '适合办公'),
 ('C1', 6, '活动区', '清洁中', '适合生日活动');
 
-INSERT INTO reservation (customer_name, customer_phone, guest_count, reservation_time, table_id, status, note)
+INSERT INTO reservation (user_id, customer_name, customer_phone, guest_count, reservation_time, table_id, status, note)
 VALUES
-('林同学', '13800000001', 2, DATE_ADD(NOW(), INTERVAL 1 DAY), 1, '待到店', '第一次来店，希望安排安静位置'),
-('陈小姐', '13800000002', 4, DATE_ADD(NOW(), INTERVAL 2 DAY), 2, '已确认', '庆生聚会');
+(3, '普通用户', '13800000003', 2, DATE_ADD(NOW(), INTERVAL 1 DAY), 1, '待到店', '线上预约，希望安排安静位置'),
+(NULL, '陈小姐', '13800000002', 4, DATE_ADD(NOW(), INTERVAL 2 DAY), 2, '已确认', '庆生聚会');
 
-INSERT INTO customer_order (order_no, customer_name, reservation_id, table_id, total_amount, pay_status, order_status, remark)
+INSERT INTO customer_order (user_id, order_no, customer_name, reservation_id, table_id, total_amount, pay_status, order_status, remark)
 VALUES
-('CC20260421093001', '林同学', 1, 1, 60.00, '已支付', '已完成', '加冰少糖'),
-('CC20260421103002', '散客王先生', NULL, 3, 28.00, '待支付', '待制作', '打包带走');
+(3, 'CC20260421093001', '普通用户', 1, 1, 60.00, '已支付', '已完成', '加冰少糖'),
+(NULL, 'CC20260421103002', '散客王先生', NULL, 3, 28.00, '待支付', '待制作', '打包带走');
 
 INSERT INTO customer_order_item (order_id, drink_id, drink_name, quantity, unit_price, subtotal)
 VALUES

@@ -12,9 +12,9 @@ const page = reactive({ current: 1, size: 5, total: 0 })
 const canWrite = hasPermission('reservation:write')
 const canDelete = hasPermission('reservation:delete')
 const isCustomerUser = hasRole('user')
-const pageTitle = computed(() => isCustomerUser ? '到店预约' : '预约管理')
-const pageDescription = computed(() => isCustomerUser ? '选择到店时间和桌台，提交你的预约申请。' : '面向顾客预约、桌台分配和到店状态流转。')
-const createLabel = computed(() => isCustomerUser ? '发起预约' : '新增预约')
+const pageTitle = computed(() => isCustomerUser ? '我的预约' : '预约管理')
+const pageDescription = computed(() => isCustomerUser ? '查看并管理你自己的到店预约记录。' : '面向顾客预约、桌台分配和到店状态流转。')
+const createLabel = computed(() => isCustomerUser ? '新增预约' : '新增预约')
 const form = reactive({
   id: null,
   customerName: '',
@@ -95,7 +95,7 @@ onMounted(loadData)
         </el-select>
         <el-button type="primary" @click="page.current = 1; loadData()">查询</el-button>
       </div>
-      <el-table :data="list" border>
+        <el-table :data="list" border>
         <el-table-column prop="customerName" label="客户" />
         <el-table-column prop="customerPhone" label="手机号" />
         <el-table-column prop="guestCount" label="人数" width="80" />
@@ -122,8 +122,8 @@ onMounted(loadData)
     </div>
 
     <el-drawer v-if="canWrite" v-model="drawerVisible" :title="form.id ? '编辑预约' : '新增预约'" size="520px">
-      <el-form label-width="88px">
-        <el-form-item label="客户"><el-input v-model="form.customerName" /></el-form-item>
+      <el-form label-position="top">
+        <el-form-item v-if="!isCustomerUser" label="客户"><el-input v-model="form.customerName" /></el-form-item>
         <el-form-item label="电话"><el-input v-model="form.customerPhone" /></el-form-item>
         <el-form-item label="人数"><el-input-number v-model="form.guestCount" :min="1" /></el-form-item>
         <el-form-item label="时间">
@@ -138,7 +138,7 @@ onMounted(loadData)
             <el-option v-for="item in tables" :key="item.id" :label="`${item.tableNo} / ${item.areaName}`" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="状态"><el-input v-model="form.status" /></el-form-item>
+        <el-form-item v-if="!isCustomerUser" label="状态"><el-input v-model="form.status" /></el-form-item>
         <el-form-item label="备注"><el-input v-model="form.note" type="textarea" :rows="3" /></el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submit">保存</el-button>

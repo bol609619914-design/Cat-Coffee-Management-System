@@ -108,7 +108,7 @@ onMounted(loadData)
     </div>
 
     <el-drawer v-if="canWrite" v-model="drawerVisible" :title="form.id ? '编辑桌台' : '新增桌台'" size="520px">
-      <el-form label-width="88px">
+      <el-form label-position="top">
         <el-form-item label="桌号"><el-input v-model="form.tableNo" /></el-form-item>
         <el-form-item label="人数"><el-input-number v-model="form.capacity" :min="1" /></el-form-item>
         <el-form-item label="区域"><el-input v-model="form.areaName" /></el-form-item>

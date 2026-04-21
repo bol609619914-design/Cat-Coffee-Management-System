@@ -13,7 +13,6 @@ public class OrderCreateRequest {
 
     private Long id;
 
-    @NotBlank(message = "客户姓名不能为空")
     private String customerName;
 
     private Long reservationId;

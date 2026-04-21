@@ -12,6 +12,10 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
 
 mybatis-plus:
   configuration:
@@ -31,6 +35,10 @@ app:
     jwt-secret: cat-coffee-management-system-demo-jwt-secret-key-2026
     access-token-expire-hours: 12
     refresh-token-expire-days: 7
+  storage:
+    type: local
+    upload-dir: ./uploads
+    public-base-url: http://localhost:8080
 
 springdoc:
   swagger-ui:

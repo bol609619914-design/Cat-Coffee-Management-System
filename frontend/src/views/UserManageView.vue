@@ -140,7 +140,7 @@ onMounted(loadData)
     </div>
 
     <el-drawer v-if="canWrite" v-model="drawerVisible" :title="form.id ? '编辑用户' : '新增用户'" size="520px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="88px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <el-form-item label="用户名" prop="username"><el-input v-model="form.username" /></el-form-item>
         <el-form-item label="密码" prop="password"><el-input v-model="form.password" type="password" show-password placeholder="编辑时可留空" /></el-form-item>
         <el-form-item label="昵称" prop="nickname"><el-input v-model="form.nickname" /></el-form-item>

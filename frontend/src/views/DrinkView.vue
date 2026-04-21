@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { deleteDrink, fetchDrinks, saveDrink } from '../api/modules'
+import { deleteDrink, fetchDrinks, saveDrink, uploadFile } from '../api/modules'
 import { ElMessage } from 'element-plus'
 import { hasPermission, hasRole } from '../utils/auth'
 
@@ -20,6 +20,7 @@ const form = reactive({
   price: 0,
   stock: 0,
   isRecommended: 0,
+  imageUrl: '',
   description: '',
   status: 1
 })
@@ -32,6 +33,7 @@ const resetForm = () => {
     price: 0,
     stock: 0,
     isRecommended: 0,
+    imageUrl: '',
     description: '',
     status: 1
   })
@@ -67,6 +69,20 @@ const removeRow = async (id) => {
   loadData()
 }
 
+const handleUpload = async (options) => {
+  try {
+    const data = new FormData()
+    data.append('file', options.file)
+    const result = await uploadFile(data, 'drink')
+    form.imageUrl = result.url
+    options.onSuccess?.(result)
+    ElMessage.success('饮品图片上传成功')
+  } catch (error) {
+    ElMessage.error(error?.response?.data?.message || error?.message || '饮品图片上传失败')
+    options.onError?.(error)
+  }
+}
+
 onMounted(loadData)
 </script>
 
@@ -90,6 +106,12 @@ onMounted(loadData)
         <el-button type="primary" @click="page.current = 1; loadData()">查询</el-button>
       </div>
       <el-table :data="list" border>
+        <el-table-column label="图片" width="88">
+          <template #default="{ row }">
+            <el-image v-if="row.imageUrl" :src="row.imageUrl" class="table-thumb" fit="cover" preview-teleported />
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="name" label="名称" />
         <el-table-column prop="category" label="分类" />
         <el-table-column prop="price" label="售价" />
@@ -116,7 +138,7 @@ onMounted(loadData)
     </div>
 
     <el-drawer v-if="canWrite" v-model="drawerVisible" :title="form.id ? '编辑饮品' : '新增饮品'" size="520px">
-      <el-form label-width="88px">
+      <el-form label-position="top">
         <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="分类"><el-input v-model="form.category" /></el-form-item>
         <el-form-item label="价格"><el-input-number v-model="form.price" :min="0" :precision="2" /></el-form-item>
@@ -126,6 +148,14 @@ onMounted(loadData)
         </el-form-item>
         <el-form-item label="状态">
           <el-switch v-model="form.status" :active-value="1" :inactive-value="0" />
+        </el-form-item>
+        <el-form-item label="图片">
+          <div class="upload-block">
+            <el-upload :show-file-list="false" :http-request="handleUpload" accept="image/*">
+              <el-button>上传图片</el-button>
+            </el-upload>
+            <el-image v-if="form.imageUrl" :src="form.imageUrl" class="upload-preview" fit="cover" preview-teleported />
+          </div>
         </el-form-item>
         <el-form-item label="描述"><el-input v-model="form.description" type="textarea" :rows="3" /></el-form-item>
         <el-form-item>

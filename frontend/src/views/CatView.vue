@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { deleteCat, fetchCats, saveCat } from '../api/modules'
+import { deleteCat, fetchCats, saveCat, uploadFile } from '../api/modules'
 import { ElMessage } from 'element-plus'
 import { hasPermission, hasRole } from '../utils/auth'
 
@@ -64,6 +64,20 @@ const submit = async () => {
   loadData()
 }
 
+const handleUpload = async (options) => {
+  try {
+    const data = new FormData()
+    data.append('file', options.file)
+    const result = await uploadFile(data, 'cat')
+    form.avatar = result.url
+    options.onSuccess?.(result)
+    ElMessage.success('头像上传成功')
+  } catch (error) {
+    ElMessage.error(error?.response?.data?.message || error?.message || '头像上传失败')
+    options.onError?.(error)
+  }
+}
+
 const editRow = (row) => {
   Object.assign(form, row)
   drawerVisible.value = true
@@ -95,6 +109,12 @@ onMounted(loadData)
       </div>
 
       <el-table :data="list" border>
+        <el-table-column label="头像" width="88">
+          <template #default="{ row }">
+            <el-image v-if="row.avatar" :src="row.avatar" class="table-thumb" fit="cover" preview-teleported />
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="name" label="名称" />
         <el-table-column prop="breed" label="品种" />
         <el-table-column prop="age" label="年龄" width="80" />
@@ -122,7 +142,7 @@ onMounted(loadData)
     </div>
 
     <el-drawer v-if="canWrite" v-model="drawerVisible" :title="form.id ? '编辑猫咪' : '新增猫咪'" size="520px">
-      <el-form label-width="88px">
+      <el-form label-position="top">
         <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="品种"><el-input v-model="form.breed" /></el-form-item>
         <el-form-item label="年龄"><el-input-number v-model="form.age" :min="0" /></el-form-item>
@@ -132,6 +152,14 @@ onMounted(loadData)
         <el-form-item label="状态"><el-input v-model="form.adoptionStatus" /></el-form-item>
         <el-form-item label="月成本"><el-input-number v-model="form.feedingCost" :min="0" :precision="2" /></el-form-item>
         <el-form-item label="生日"><el-date-picker v-model="form.birthday" type="date" value-format="YYYY-MM-DD" /></el-form-item>
+        <el-form-item label="头像">
+          <div class="upload-block">
+            <el-upload :show-file-list="false" :http-request="handleUpload" accept="image/*">
+              <el-button>上传图片</el-button>
+            </el-upload>
+            <el-image v-if="form.avatar" :src="form.avatar" class="upload-preview" fit="cover" preview-teleported />
+          </div>
+        </el-form-item>
         <el-form-item label="简介"><el-input v-model="form.introduction" type="textarea" :rows="3" /></el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submit">保存</el-button>

@@ -60,6 +60,43 @@ public class DashboardServiceImpl implements DashboardService {
                 .map(entry -> new NameValueVO(entry.getKey(), entry.getValue()))
                 .toList();
 
-        return new DashboardVO(catCount, reservationCount, activeOrderCount, todayRevenue, hotDrinks, reservationStatusSummary);
+        List<NameValueVO> weeklyRevenueTrend = buildWeeklyRevenueTrend();
+
+        Map<String, Long> orderStatus = customerOrderMapper.selectList(new LambdaQueryWrapper<CustomerOrder>())
+                .stream()
+                .collect(Collectors.groupingBy(CustomerOrder::getOrderStatus, Collectors.counting()));
+        List<NameValueVO> orderStatusSummary = orderStatus.entrySet().stream()
+                .map(entry -> new NameValueVO(entry.getKey(), entry.getValue()))
+                .toList();
+
+        return new DashboardVO(
+                catCount,
+                reservationCount,
+                activeOrderCount,
+                todayRevenue,
+                hotDrinks,
+                reservationStatusSummary,
+                weeklyRevenueTrend,
+                orderStatusSummary
+        );
+    }
+
+    private List<NameValueVO> buildWeeklyRevenueTrend() {
+        LocalDate startDate = LocalDate.now().minusDays(6);
+        List<CustomerOrder> recentOrders = customerOrderMapper.selectList(new LambdaQueryWrapper<CustomerOrder>()
+                .ge(CustomerOrder::getCreateTime, startDate.atStartOfDay()));
+
+        Map<LocalDate, BigDecimal> revenueByDate = recentOrders.stream()
+                .collect(Collectors.groupingBy(
+                        item -> item.getCreateTime().toLocalDate(),
+                        Collectors.reducing(BigDecimal.ZERO, CustomerOrder::getTotalAmount, BigDecimal::add)
+                ));
+
+        return startDate.datesUntil(LocalDate.now().plusDays(1))
+                .map(date -> new NameValueVO(
+                        date.getMonthValue() + "/" + date.getDayOfMonth(),
+                        revenueByDate.getOrDefault(date, BigDecimal.ZERO).longValue()
+                ))
+                .toList();
     }
 }

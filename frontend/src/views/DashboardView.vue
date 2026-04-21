@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import * as echarts from 'echarts'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { fetchDashboard } from '../api/modules'
 
 const dashboard = ref({
@@ -8,14 +9,63 @@ const dashboard = ref({
   activeOrderCount: 0,
   todayRevenue: 0,
   hotDrinks: [],
-  reservationStatusSummary: []
+  reservationStatusSummary: [],
+  weeklyRevenueTrend: [],
+  orderStatusSummary: []
 })
+
+const revenueChartRef = ref(null)
+const statusChartRef = ref(null)
+let revenueChart
+let statusChart
 
 const loadData = async () => {
   dashboard.value = await fetchDashboard()
+  await nextTick()
+  renderCharts()
+}
+
+const renderCharts = () => {
+  if (revenueChartRef.value) {
+    revenueChart ??= echarts.init(revenueChartRef.value)
+    revenueChart.setOption({
+      grid: { left: 36, right: 18, top: 30, bottom: 28 },
+      tooltip: { trigger: 'axis' },
+      xAxis: {
+        type: 'category',
+        data: dashboard.value.weeklyRevenueTrend.map((item) => item.name)
+      },
+      yAxis: { type: 'value' },
+      series: [{
+        type: 'line',
+        smooth: true,
+        data: dashboard.value.weeklyRevenueTrend.map((item) => item.value),
+        areaStyle: { color: 'rgba(214, 123, 66, 0.18)' },
+        lineStyle: { color: '#d67b42', width: 3 },
+        itemStyle: { color: '#d67b42' }
+      }]
+    })
+  }
+
+  if (statusChartRef.value) {
+    statusChart ??= echarts.init(statusChartRef.value)
+    statusChart.setOption({
+      tooltip: { trigger: 'item' },
+      series: [{
+        type: 'pie',
+        radius: ['48%', '72%'],
+        data: dashboard.value.orderStatusSummary.map((item) => ({ name: item.name, value: item.value })),
+        label: { color: '#5b4b3e' }
+      }]
+    })
+  }
 }
 
 onMounted(loadData)
+onBeforeUnmount(() => {
+  revenueChart?.dispose()
+  statusChart?.dispose()
+})
 </script>
 
 <template>
@@ -48,6 +98,18 @@ onMounted(loadData)
     </div>
 
     <div class="panel-grid">
+      <div class="panel">
+        <h3>近 7 天营收趋势</h3>
+        <div ref="revenueChartRef" class="chart-box"></div>
+      </div>
+
+      <div class="panel">
+        <h3>订单状态分布</h3>
+        <div ref="statusChartRef" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="panel-grid" style="margin-top: 16px;">
       <div class="panel">
         <h3>热销饮品</h3>
         <div class="list-box">

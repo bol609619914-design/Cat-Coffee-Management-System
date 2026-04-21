@@ -8,6 +8,7 @@ export const changePassword = (data) => http.post('/auth/password/change', data)
 export const fetchCurrentUser = () => http.get('/auth/me')
 
 export const fetchDashboard = () => http.get('/dashboard')
+export const uploadFile = (data, biz = 'common') => http.post(`/files/upload?biz=${biz}`, data)
 
 export const fetchCats = (params) => http.get('/cats', { params })
 export const saveCat = (data) => http.post('/cats', data)

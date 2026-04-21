@@ -18,4 +18,6 @@ public class DashboardVO {
     private BigDecimal todayRevenue;
     private List<NameValueVO> hotDrinks;
     private List<NameValueVO> reservationStatusSummary;
+    private List<NameValueVO> weeklyRevenueTrend;
+    private List<NameValueVO> orderStatusSummary;
 }

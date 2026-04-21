@@ -115,7 +115,7 @@ onMounted(loadData)
     </div>
 
     <el-drawer v-if="canWrite" v-model="drawerVisible" :title="form.id ? '编辑角色' : '新增角色'" size="560px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="88px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <el-form-item label="编码" prop="roleCode"><el-input v-model="form.roleCode" /></el-form-item>
         <el-form-item label="名称" prop="roleName"><el-input v-model="form.roleName" /></el-form-item>
         <el-form-item label="状态">

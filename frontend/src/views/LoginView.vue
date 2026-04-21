@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { login, register } from '../api/modules'
@@ -9,8 +9,8 @@ const router = useRouter()
 const activeTab = ref('login')
 
 const loginForm = reactive({
-  username: 'admin',
-  password: 'admin123'
+  username: '',
+  password: ''
 })
 
 const registerForm = reactive({
@@ -19,8 +19,6 @@ const registerForm = reactive({
   password: '',
   confirmPassword: ''
 })
-
-const cardTitle = computed(() => activeTab.value === 'login' ? '欢迎登录' : '欢迎注册')
 
 const submitLogin = async () => {
   const data = await login(loginForm)
@@ -49,7 +47,9 @@ const submitRegister = async () => {
 <template>
   <section class="login-shell">
     <div class="login-hero">
+      <img class="login-logo" src="/assets/cat-cafe-logo.png" alt="Cat Cafe Logo" />
       <h1>猫咖管理平台</h1>
+      <p>Cat Coffee Console</p>
     </div>
 
     <div class="login-card-wrap">
@@ -73,8 +73,6 @@ const submitRegister = async () => {
           </button>
         </div>
 
-        <h2>{{ cardTitle }}</h2>
-
         <el-form v-if="activeTab === 'login'" label-position="top">
           <el-form-item label="用户名">
             <el-input v-model="loginForm.username" placeholder="请输入用户名" />
@@ -82,7 +80,7 @@ const submitRegister = async () => {
           <el-form-item label="密码">
             <el-input v-model="loginForm.password" type="password" show-password placeholder="请输入密码" />
           </el-form-item>
-          <el-button type="primary" style="width: 100%;" @click="submitLogin">登录系统</el-button>
+          <el-button class="login-submit" @click="submitLogin">登录系统</el-button>
         </el-form>
 
         <el-form v-else label-position="top">
@@ -98,7 +96,7 @@ const submitRegister = async () => {
           <el-form-item label="确认密码">
             <el-input v-model="registerForm.confirmPassword" type="password" show-password placeholder="请再次输入密码" />
           </el-form-item>
-          <el-button type="primary" style="width: 100%;" @click="submitRegister">注册并进入系统</el-button>
+          <el-button class="login-submit" @click="submitRegister">注册并进入系统</el-button>
         </el-form>
       </div>
     </div>

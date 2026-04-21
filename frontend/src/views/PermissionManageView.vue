@@ -101,7 +101,7 @@ onMounted(loadData)
     </div>
 
     <el-drawer v-if="canWrite" v-model="drawerVisible" :title="form.id ? '编辑权限' : '新增权限'" size="520px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="88px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <el-form-item label="模块" prop="moduleName"><el-input v-model="form.moduleName" /></el-form-item>
         <el-form-item label="编码" prop="permissionCode"><el-input v-model="form.permissionCode" /></el-form-item>
         <el-form-item label="名称" prop="permissionName"><el-input v-model="form.permissionName" /></el-form-item>

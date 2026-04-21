@@ -14,8 +14,8 @@ const menus = [
   { path: '/cats', label: '猫咪管理', userLabel: '猫咪浏览', permission: 'cat:read' },
   { path: '/drinks', label: '饮品管理', userLabel: '饮品菜单', permission: 'drink:read' },
   { path: '/tables', label: '桌台管理', permission: 'table:read' },
-  { path: '/reservations', label: '预约管理', userLabel: '到店预约', permission: 'reservation:read' },
-  { path: '/orders', label: '订单管理', userLabel: '饮品预定', permission: 'order:read' },
+  { path: '/reservations', label: '预约管理', userLabel: '我的预约', permission: 'reservation:read' },
+  { path: '/orders', label: '订单管理', userLabel: '我的订单', permission: 'order:read' },
   { path: '/system/users', label: '用户管理', permission: 'system:user:read' },
   { path: '/system/roles', label: '角色管理', permission: 'system:role:read' },
   { path: '/system/permissions', label: '权限管理', permission: 'system:permission:read' }
@@ -117,7 +117,7 @@ watch(
   <div v-else-if="!checkingAuth" class="layout">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">CAT</div>
+        <img class="brand-logo" src="/assets/cat-cafe-logo.png" alt="Cat Cafe Logo" />
         <div>
           <h1>猫咖平台</h1>
           <p>Cat Coffee Console</p>
@@ -127,10 +127,6 @@ watch(
       <div class="user-panel">
         <strong>{{ userInfo?.nickname || '未登录用户' }}</strong>
         <small>{{ userInfo?.roles?.join(' / ') || 'guest' }}</small>
-      </div>
-
-      <div class="sidebar-actions">
-        <el-button class="user-action-button" @click="openChangePassword">修改密码</el-button>
       </div>
 
       <el-menu
@@ -146,7 +142,13 @@ watch(
         </el-menu-item>
       </el-menu>
 
-      <el-button class="logout-button" @click="logout">退出登录</el-button>
+      <div class="sidebar-footer">
+        <div class="sidebar-actions">
+          <el-button class="user-action-button" @click="openChangePassword">修改密码</el-button>
+        </div>
+
+        <el-button class="logout-button" @click="logout">退出登录</el-button>
+      </div>
     </aside>
 
     <main class="content">

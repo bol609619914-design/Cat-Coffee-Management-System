@@ -13,9 +13,9 @@ const page = reactive({ current: 1, size: 5, total: 0 })
 const canWrite = hasPermission('order:write')
 const canDelete = hasPermission('order:delete')
 const isCustomerUser = hasRole('user')
-const pageTitle = computed(() => isCustomerUser ? '饮品预定' : '订单管理')
-const pageDescription = computed(() => isCustomerUser ? '挑选饮品、选择桌台并提交你的订单。' : '维护散客与预约关联订单，并自动扣减饮品库存。')
-const createLabel = computed(() => isCustomerUser ? '立即下单' : '新增订单')
+const pageTitle = computed(() => isCustomerUser ? '我的订单' : '订单管理')
+const pageDescription = computed(() => isCustomerUser ? '查看你提交的饮品订单，并继续发起新的预定。' : '维护散客与预约关联订单，并自动扣减饮品库存。')
+const createLabel = computed(() => isCustomerUser ? '新增订单' : '新增订单')
 const form = reactive({
   id: null,
   customerName: '',
@@ -141,15 +141,15 @@ onMounted(loadData)
     </div>
 
     <el-drawer v-if="canWrite" v-model="drawerVisible" :title="form.id ? '编辑订单' : '新增订单'" size="560px">
-      <el-form label-width="88px">
-        <el-form-item label="客户"><el-input v-model="form.customerName" /></el-form-item>
+      <el-form label-position="top">
+        <el-form-item v-if="!isCustomerUser" label="客户"><el-input v-model="form.customerName" /></el-form-item>
         <el-form-item label="桌台">
           <el-select v-model="form.tableId" placeholder="选择桌台">
             <el-option v-for="item in tables" :key="item.id" :label="item.tableNo" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="支付"><el-input v-model="form.payStatus" /></el-form-item>
-        <el-form-item label="状态"><el-input v-model="form.orderStatus" /></el-form-item>
+        <el-form-item v-if="!isCustomerUser" label="支付"><el-input v-model="form.payStatus" /></el-form-item>
+        <el-form-item v-if="!isCustomerUser" label="状态"><el-input v-model="form.orderStatus" /></el-form-item>
         <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
 
         <div class="list-box" style="margin-bottom: 14px;">
@@ -160,7 +160,6 @@ onMounted(loadData)
               </el-select>
               <el-input-number v-model="item.quantity" :min="1" />
             </div>
-            <el-button link type="danger" @click="removeItem(index)" :disabled="form.items.length === 1">删除</el-button>
           </div>
         </div>
 
