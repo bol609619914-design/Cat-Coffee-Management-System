@@ -26,6 +26,10 @@ public class OrderCreateRequest {
     @NotBlank(message = "订单状态不能为空")
     private String orderStatus;
 
+    private Integer pointsUsed;
+
+    private Long userCouponId;
+
     private String remark;
 
     @Valid

@@ -16,6 +16,10 @@ const menus = [
   { path: '/tables', label: '桌台管理', permission: 'table:read' },
   { path: '/reservations', label: '预约管理', userLabel: '我的预约', permission: 'reservation:read' },
   { path: '/orders', label: '订单管理', userLabel: '我的订单', permission: 'order:read' },
+  { path: '/member/points', label: '会员积分', userLabel: '积分中心', permission: 'points:read' },
+  { path: '/member/coupons', label: '优惠券中心', userLabel: '我的优惠券', permission: 'coupon:read' },
+  { path: '/member/reviews', label: '评价管理', userLabel: '我的评价', permission: 'review:read' },
+  { path: '/marketing/activities', label: '活动营销', userLabel: '活动专区', permission: 'activity:read' },
   { path: '/system/users', label: '用户管理', permission: 'system:user:read' },
   { path: '/system/roles', label: '角色管理', permission: 'system:role:read' },
   { path: '/system/permissions', label: '权限管理', permission: 'system:permission:read' }

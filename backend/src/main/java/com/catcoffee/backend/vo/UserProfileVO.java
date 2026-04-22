@@ -19,6 +19,8 @@ public class UserProfileVO {
     private String username;
     @Schema(description = "昵称")
     private String nickname;
+    @Schema(description = "会员积分")
+    private Integer memberPoints;
     @Schema(description = "角色编码列表")
     private List<String> roles;
     @Schema(description = "权限编码列表")

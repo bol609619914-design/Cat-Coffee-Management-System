@@ -71,6 +71,7 @@ public class AuthServiceImpl implements AuthService {
         user.setNickname(nickname);
         user.setPassword(passwordEncoder.encode(password));
         user.setStatus(1);
+        user.setMemberPoints(0);
         user.setTokenVersion(0);
         sysUserMapper.insert(user);
 
@@ -130,6 +131,7 @@ public class AuthServiceImpl implements AuthService {
                 authUser.getId(),
                 authUser.getUsername(),
                 authUser.getNickname(),
+                sysUserMapper.selectById(authUser.getId()).getMemberPoints(),
                 authUser.getRoles(),
                 authUser.getPermissions()
         );

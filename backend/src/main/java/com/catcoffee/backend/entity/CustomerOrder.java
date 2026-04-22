@@ -16,8 +16,14 @@ public class CustomerOrder extends BaseEntity {
     private String customerName;
     private Long reservationId;
     private Long tableId;
+    private BigDecimal originalAmount;
+    private BigDecimal discountAmount;
     private BigDecimal totalAmount;
+    private BigDecimal payableAmount;
     private String payStatus;
     private String orderStatus;
+    private Integer pointsUsed;
+    private Integer pointsAwarded;
+    private Long userCouponId;
     private String remark;
 }

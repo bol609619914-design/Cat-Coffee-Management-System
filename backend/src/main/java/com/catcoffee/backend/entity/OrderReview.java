@@ -6,13 +6,13 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("sys_user")
-public class SysUser extends BaseEntity {
+@TableName("order_review")
+public class OrderReview extends BaseEntity {
 
-    private String username;
-    private String password;
-    private String nickname;
-    private Integer memberPoints;
+    private Long userId;
+    private Long orderId;
+    private Long drinkId;
+    private Integer rating;
+    private String content;
     private Integer status;
-    private Integer tokenVersion;
 }

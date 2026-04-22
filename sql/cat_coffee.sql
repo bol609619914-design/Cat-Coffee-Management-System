@@ -1,6 +1,12 @@
 CREATE DATABASE IF NOT EXISTS cat_coffee DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE cat_coffee;
 
+DROP TABLE IF EXISTS marketing_activity_rule;
+DROP TABLE IF EXISTS marketing_activity;
+DROP TABLE IF EXISTS order_review;
+DROP TABLE IF EXISTS user_coupon;
+DROP TABLE IF EXISTS coupon_template;
+DROP TABLE IF EXISTS member_point_flow;
 DROP TABLE IF EXISTS customer_order_item;
 DROP TABLE IF EXISTS customer_order;
 DROP TABLE IF EXISTS reservation;
@@ -84,9 +90,15 @@ CREATE TABLE customer_order (
     customer_name VARCHAR(50) NOT NULL,
     reservation_id BIGINT,
     table_id BIGINT NOT NULL,
+    original_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
     total_amount DECIMAL(10, 2) NOT NULL,
+    discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    payable_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
     pay_status VARCHAR(20) NOT NULL,
     order_status VARCHAR(20) NOT NULL,
+    points_used INT NOT NULL DEFAULT 0,
+    points_awarded INT NOT NULL DEFAULT 0,
+    user_coupon_id BIGINT,
     remark VARCHAR(255),
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -115,12 +127,110 @@ CREATE TABLE sys_user (
     username VARCHAR(50) NOT NULL,
     password VARCHAR(100) NOT NULL,
     nickname VARCHAR(50) NOT NULL,
+    member_points INT NOT NULL DEFAULT 0,
     status TINYINT NOT NULL DEFAULT 1,
     token_version INT NOT NULL DEFAULT 0,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted TINYINT DEFAULT 0,
     UNIQUE KEY uk_username (username)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE member_point_flow (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    change_type VARCHAR(20) NOT NULL,
+    change_amount INT NOT NULL,
+    balance_after INT NOT NULL,
+    biz_type VARCHAR(30),
+    biz_id BIGINT,
+    remark VARCHAR(255),
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted TINYINT DEFAULT 0,
+    KEY idx_point_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE coupon_template (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(60) NOT NULL,
+    description VARCHAR(255),
+    threshold_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    point_cost INT NOT NULL DEFAULT 0,
+    total_count INT NOT NULL DEFAULT 0,
+    issued_count INT NOT NULL DEFAULT 0,
+    validity_type VARCHAR(20) NOT NULL,
+    valid_days INT,
+    start_time DATETIME,
+    end_time DATETIME,
+    status TINYINT NOT NULL DEFAULT 1,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted TINYINT DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE user_coupon (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    template_id BIGINT NOT NULL,
+    coupon_name VARCHAR(60) NOT NULL,
+    threshold_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL,
+    received_time DATETIME,
+    used_time DATETIME,
+    expire_time DATETIME,
+    order_id BIGINT,
+    source_type VARCHAR(20),
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted TINYINT DEFAULT 0,
+    KEY idx_coupon_user (user_id),
+    KEY idx_coupon_template (template_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE order_review (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    order_id BIGINT NOT NULL,
+    drink_id BIGINT NOT NULL,
+    rating INT NOT NULL,
+    content VARCHAR(500),
+    status TINYINT NOT NULL DEFAULT 1,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted TINYINT DEFAULT 0,
+    KEY idx_review_user (user_id),
+    KEY idx_review_order (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE marketing_activity (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(80) NOT NULL,
+    activity_type VARCHAR(30) NOT NULL,
+    banner_image VARCHAR(255),
+    start_time DATETIME NOT NULL,
+    end_time DATETIME NOT NULL,
+    status TINYINT NOT NULL DEFAULT 1,
+    description VARCHAR(500),
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted TINYINT DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE marketing_activity_rule (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    activity_id BIGINT NOT NULL,
+    rule_type VARCHAR(30),
+    rule_value VARCHAR(255),
+    target_type VARCHAR(30),
+    target_id BIGINT,
+    sort_order INT DEFAULT 0,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted TINYINT DEFAULT 0,
+    KEY idx_activity_rule (activity_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE sys_role (
@@ -193,10 +303,10 @@ VALUES
 (3, '普通用户', '13800000003', 2, DATE_ADD(NOW(), INTERVAL 1 DAY), 1, '待到店', '线上预约，希望安排安静位置'),
 (NULL, '陈小姐', '13800000002', 4, DATE_ADD(NOW(), INTERVAL 2 DAY), 2, '已确认', '庆生聚会');
 
-INSERT INTO customer_order (user_id, order_no, customer_name, reservation_id, table_id, total_amount, pay_status, order_status, remark)
+INSERT INTO customer_order (user_id, order_no, customer_name, reservation_id, table_id, original_amount, total_amount, discount_amount, payable_amount, pay_status, order_status, points_used, points_awarded, user_coupon_id, remark)
 VALUES
-(3, 'CC20260421093001', '普通用户', 1, 1, 60.00, '已支付', '已完成', '加冰少糖'),
-(NULL, 'CC20260421103002', '散客王先生', NULL, 3, 28.00, '待支付', '待制作', '打包带走');
+(3, 'CC20260421093001', '普通用户', 1, 1, 60.00, 52.00, 8.00, 52.00, '已支付', '已完成', 0, 52, 1, '加冰少糖'),
+(NULL, 'CC20260421103002', '散客王先生', NULL, 3, 28.00, 28.00, 0.00, 28.00, '待支付', '待制作', 0, 0, NULL, '打包带走');
 
 INSERT INTO customer_order_item (order_id, drink_id, drink_name, quantity, unit_price, subtotal)
 VALUES
@@ -205,11 +315,11 @@ VALUES
 (1, 2, '猫爪抹茶', 1, 10.00, 10.00),
 (2, 1, '海盐拿铁', 1, 28.00, 28.00);
 
-INSERT INTO sys_user (id, username, password, nickname, status, token_version)
+INSERT INTO sys_user (id, username, password, nickname, member_points, status, token_version)
 VALUES
-(1, 'admin', '$2y$10$tw0jWBKya17tGkLVJSDDteoKqp7ab6cYyyIodSgaE0BdXtOgFQ6U2', '超级管理员', 1, 0),
-(2, 'staff', '$2y$10$kGKgOraSXMrFM2ewfxF/3.Bs2H0t.5.GqJU6lnR8zFBOVFDjfBRfC', '店员小猫', 1, 0),
-(3, 'user', '$2a$10$4TsDEkARWur6INJCeDWt.e3PLhXFE/JK1cq.cI7eutLMMskm3JpYi', '普通用户', 1, 0);
+(1, 'admin', '$2y$10$tw0jWBKya17tGkLVJSDDteoKqp7ab6cYyyIodSgaE0BdXtOgFQ6U2', '超级管理员', 200, 1, 0),
+(2, 'staff', '$2y$10$kGKgOraSXMrFM2ewfxF/3.Bs2H0t.5.GqJU6lnR8zFBOVFDjfBRfC', '店员小猫', 80, 1, 0),
+(3, 'user', '$2a$10$4TsDEkARWur6INJCeDWt.e3PLhXFE/JK1cq.cI7eutLMMskm3JpYi', '普通用户', 128, 1, 0);
 
 INSERT INTO sys_role (id, role_code, role_name, status)
 VALUES
@@ -243,7 +353,14 @@ VALUES
 (22, 'system:role:delete', '删除角色', '系统管理', 1),
 (23, 'system:permission:read', '查看权限', '系统管理', 1),
 (24, 'system:permission:write', '编辑权限', '系统管理', 1),
-(25, 'system:permission:delete', '删除权限', '系统管理', 1);
+(25, 'system:permission:delete', '删除权限', '系统管理', 1),
+(26, 'points:read', '查看积分', '会员营销', 1),
+(27, 'coupon:read', '查看优惠券', '会员营销', 1),
+(28, 'coupon:write', '管理优惠券', '会员营销', 1),
+(29, 'review:read', '查看评价', '会员营销', 1),
+(30, 'review:write', '管理评价', '会员营销', 1),
+(31, 'activity:read', '查看活动', '会员营销', 1),
+(32, 'activity:write', '管理活动', '会员营销', 1);
 
 INSERT INTO sys_user_role (user_id, role_id)
 VALUES
@@ -251,10 +368,42 @@ VALUES
 (2, 2),
 (3, 3);
 
+INSERT INTO member_point_flow (user_id, change_type, change_amount, balance_after, biz_type, biz_id, remark)
+VALUES
+(3, '发放', 60, 60, '订单', 1, '订单支付奖励积分'),
+(3, '兑换', -30, 30, '优惠券', 2, '积分兑换会员满减券'),
+(3, '发放', 98, 128, '活动', 1, '春日猫咖打卡季活动奖励');
+
+INSERT INTO coupon_template (id, name, description, threshold_amount, discount_amount, point_cost, total_count, issued_count, validity_type, valid_days, start_time, end_time, status)
+VALUES
+(1, '新人立减券', '新用户首单可用', 30.00, 8.00, 0, 500, 1, '固定天数', 15, NULL, NULL, 1),
+(2, '会员满减券', '会员积分兑换专属优惠', 50.00, 12.00, 30, 300, 1, '固定天数', 10, NULL, NULL, 1);
+
+INSERT INTO user_coupon (id, user_id, template_id, coupon_name, threshold_amount, discount_amount, status, received_time, used_time, expire_time, order_id, source_type)
+VALUES
+(1, 3, 1, '新人立减券', 30.00, 8.00, '已使用', DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 10 DAY), 1, '后台发放'),
+(2, 3, 2, '会员满减券', 50.00, 12.00, '未使用', NOW(), NULL, DATE_ADD(NOW(), INTERVAL 9 DAY), NULL, '积分兑换');
+
+INSERT INTO order_review (user_id, order_id, drink_id, rating, content, status)
+VALUES
+(3, 1, 1, 5, '海盐拿铁很顺口，拉花也很好看。', 1),
+(3, 1, 4, 4, '酸奶杯拍照很好看，口感也清爽。', 1);
+
+INSERT INTO marketing_activity (id, name, activity_type, banner_image, start_time, end_time, status, description)
+VALUES
+(1, '春日猫咖打卡季', '限时促销', '', NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), 1, '到店打卡、下单互动可享多重会员权益'),
+(2, '会员双倍积分周', '会员拉新', '', NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY), 1, '活动期间支付订单可累计双倍积分。');
+
+INSERT INTO marketing_activity_rule (activity_id, rule_type, rule_value, target_type, target_id, sort_order)
+VALUES
+(1, '满减', '满50减12', '全场', NULL, 1),
+(1, '积分奖励', '支付订单额等额返积分', '会员', NULL, 2),
+(2, '积分奖励', '全单双倍积分', '会员', NULL, 1);
+
 INSERT INTO sys_role_permission (role_id, permission_id)
 VALUES
 (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8),
 (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16),
-(1, 17), (1, 18), (1, 19), (1, 20), (1, 21), (1, 22), (1, 23), (1, 24), (1, 25),
-(2, 1), (2, 2), (2, 5), (2, 6), (2, 8), (2, 11), (2, 12), (2, 14), (2, 15),
-(3, 2), (3, 5), (3, 8), (3, 11), (3, 12), (3, 14), (3, 15);
+(1, 17), (1, 18), (1, 19), (1, 20), (1, 21), (1, 22), (1, 23), (1, 24), (1, 25), (1, 26), (1, 27), (1, 28), (1, 29), (1, 30), (1, 31), (1, 32),
+(2, 1), (2, 2), (2, 5), (2, 6), (2, 8), (2, 11), (2, 12), (2, 14), (2, 15), (2, 26), (2, 27), (2, 29), (2, 31),
+(3, 2), (3, 5), (3, 8), (3, 11), (3, 12), (3, 14), (3, 15), (3, 26), (3, 27), (3, 28), (3, 29), (3, 30), (3, 31);

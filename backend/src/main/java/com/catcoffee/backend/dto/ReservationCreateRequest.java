@@ -1,5 +1,6 @@
 package com.catcoffee.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +25,7 @@ public class ReservationCreateRequest {
 
     @NotNull(message = "预约时间不能为空")
     @Future(message = "预约时间必须大于当前时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime reservationTime;
 
     @NotNull(message = "桌台不能为空")

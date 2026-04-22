@@ -17,6 +17,7 @@ import com.catcoffee.backend.mapper.DrinkMapper;
 import com.catcoffee.backend.security.AuthUser;
 import com.catcoffee.backend.security.SecurityUtils;
 import com.catcoffee.backend.service.OrderService;
+import com.catcoffee.backend.service.impl.MarketingServiceImpl.OrderBenefitResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class OrderServiceImpl implements OrderService {
     private final CustomerOrderItemMapper customerOrderItemMapper;
     private final DrinkMapper drinkMapper;
     private final CafeTableMapper cafeTableMapper;
+    private final MarketingServiceImpl marketingService;
 
     @Override
     public PageResult<CustomerOrder> list(long current, long size, String orderStatus, String payStatus) {
@@ -66,17 +68,30 @@ public class OrderServiceImpl implements OrderService {
         } else if (!StringUtils.hasText(request.getCustomerName())) {
             throw new BusinessException("客户姓名不能为空");
         }
-        order.setTotalAmount(calculateAndPersistItems(request.getItems(), order, request.getId()));
+        BigDecimal originalAmount = calculateOrderAmount(request.getItems());
+        order.setOriginalAmount(originalAmount);
+        OrderBenefitResult benefitResult = order.getUserId() == null
+                ? new OrderBenefitResult(BigDecimal.ZERO, null, 0)
+                : marketingService.applyOrderBenefits(order.getUserId(), request.getPointsUsed(), request.getUserCouponId(), originalAmount);
+        order.setDiscountAmount(benefitResult.discountAmount());
+        order.setPointsUsed(benefitResult.pointsUsed());
+        order.setUserCouponId(benefitResult.userCoupon() == null ? null : benefitResult.userCoupon().getId());
+        order.setPayableAmount(originalAmount.subtract(benefitResult.discountAmount()));
+        order.setTotalAmount(order.getPayableAmount());
+        order.setPointsAwarded(0);
 
         if (request.getId() == null) {
             order.setOrderNo(buildOrderNo());
             persistItems(request.getItems(), order);
+            marketingService.consumeOrderBenefits(order, benefitResult.userCoupon(), benefitResult.pointsUsed());
+            customerOrderMapper.updateById(order);
         } else {
             CustomerOrder exist = customerOrderMapper.selectById(request.getId());
             if (exist == null) {
                 throw new BusinessException("订单不存在");
             }
             assertOwner(exist, currentUser);
+            marketingService.rollbackOrderBenefits(exist);
             order.setId(request.getId());
             order.setOrderNo(exist.getOrderNo());
             order.setUserId(exist.getUserId());
@@ -87,6 +102,8 @@ public class OrderServiceImpl implements OrderService {
             customerOrderMapper.updateById(order);
             customerOrderItemMapper.delete(new LambdaQueryWrapper<CustomerOrderItem>().eq(CustomerOrderItem::getOrderId, request.getId()));
             persistItems(request.getItems(), order);
+            marketingService.consumeOrderBenefits(order, benefitResult.userCoupon(), benefitResult.pointsUsed());
+            customerOrderMapper.updateById(order);
         }
         return customerOrderMapper.selectById(order.getId());
     }
@@ -100,11 +117,13 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException("订单不存在");
         }
         assertOwner(order, currentUser);
+        marketingService.rollbackOrderBenefits(order);
+        restoreInventory(id);
         customerOrderMapper.deleteById(id);
         customerOrderItemMapper.delete(new LambdaQueryWrapper<CustomerOrderItem>().eq(CustomerOrderItem::getOrderId, id));
     }
 
-    private BigDecimal calculateAndPersistItems(List<OrderItemRequest> items, CustomerOrder order, Long orderId) {
+    private BigDecimal calculateOrderAmount(List<OrderItemRequest> items) {
         BigDecimal total = BigDecimal.ZERO;
         for (OrderItemRequest item : items) {
             Drink drink = drinkMapper.selectById(item.getDrinkId());

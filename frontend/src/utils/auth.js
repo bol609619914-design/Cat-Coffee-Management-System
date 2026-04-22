@@ -44,6 +44,9 @@ export const getHomePath = () => {
   if (roles.includes('user') && permissions.includes('reservation:read')) {
     return '/reservations'
   }
+  if (permissions.includes('points:read')) {
+    return '/member/points'
+  }
   if (permissions.includes('dashboard:view')) {
     return '/dashboard'
   }

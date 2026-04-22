@@ -6,6 +6,10 @@ import DrinkView from '../views/DrinkView.vue'
 import TableView from '../views/TableView.vue'
 import ReservationView from '../views/ReservationView.vue'
 import OrderView from '../views/OrderView.vue'
+import PointCenterView from '../views/PointCenterView.vue'
+import CouponCenterView from '../views/CouponCenterView.vue'
+import ReviewCenterView from '../views/ReviewCenterView.vue'
+import ActivityCenterView from '../views/ActivityCenterView.vue'
 import LoginView from '../views/LoginView.vue'
 import UserManageView from '../views/UserManageView.vue'
 import RoleManageView from '../views/RoleManageView.vue'
@@ -22,6 +26,10 @@ const routes = [
   { path: '/tables', component: TableView, meta: { permission: 'table:read', label: '桌台管理' } },
   { path: '/reservations', component: ReservationView, meta: { permission: 'reservation:read', label: '预约管理' } },
   { path: '/orders', component: OrderView, meta: { permission: 'order:read', label: '订单管理' } },
+  { path: '/member/points', component: PointCenterView, meta: { permission: 'points:read', label: '会员积分' } },
+  { path: '/member/coupons', component: CouponCenterView, meta: { permission: 'coupon:read', label: '优惠券中心' } },
+  { path: '/member/reviews', component: ReviewCenterView, meta: { permission: 'review:read', label: '评价管理' } },
+  { path: '/marketing/activities', component: ActivityCenterView, meta: { permission: 'activity:read', label: '活动营销' } },
   { path: '/system/users', component: UserManageView, meta: { permission: 'system:user:read', label: '用户管理' } },
   { path: '/system/roles', component: RoleManageView, meta: { permission: 'system:role:read', label: '角色管理' } },
   { path: '/system/permissions', component: PermissionManageView, meta: { permission: 'system:permission:read', label: '权限管理' } }

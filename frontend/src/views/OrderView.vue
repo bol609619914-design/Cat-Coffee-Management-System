@@ -1,12 +1,14 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { deleteOrder, fetchDrinks, fetchOrders, fetchTables, saveOrder } from '../api/modules'
+import { deleteOrder, fetchDrinks, fetchOrders, fetchPointSummary, fetchTables, fetchUserCoupons, saveOrder } from '../api/modules'
 import { ElMessage } from 'element-plus'
 import { hasPermission, hasRole } from '../utils/auth'
 
 const list = ref([])
 const tables = ref([])
 const drinks = ref([])
+const coupons = ref([])
+const pointSummary = ref({ currentPoints: 0 })
 const drawerVisible = ref(false)
 const query = reactive({ orderStatus: '', payStatus: '' })
 const page = reactive({ current: 1, size: 5, total: 0 })
@@ -23,6 +25,8 @@ const form = reactive({
   tableId: null,
   payStatus: '待支付',
   orderStatus: '待制作',
+  pointsUsed: 0,
+  userCouponId: null,
   remark: '',
   items: [{ drinkId: null, quantity: 1 }]
 })
@@ -35,6 +39,8 @@ const resetForm = () => {
     tableId: null,
     payStatus: '待支付',
     orderStatus: '待制作',
+    pointsUsed: 0,
+    userCouponId: null,
     remark: '',
     items: [{ drinkId: null, quantity: 1 }]
   })
@@ -46,15 +52,23 @@ const openCreate = () => {
 }
 
 const loadData = async () => {
-  const [orderData, tableData, drinkData] = await Promise.all([
+  const requests = [
     fetchOrders({ ...query, current: page.current, size: page.size }),
     fetchTables({ current: 1, size: 100 }),
     fetchDrinks({ current: 1, size: 100, status: 1 })
-  ])
+  ]
+  if (isCustomerUser) {
+    requests.push(fetchPointSummary(), fetchUserCoupons({ current: 1, size: 100, status: '未使用' }))
+  }
+  const [orderData, tableData, drinkData, pointData, couponData] = await Promise.all(requests)
   list.value = orderData.records
   page.total = orderData.total
   tables.value = tableData.records
   drinks.value = drinkData.records
+  if (isCustomerUser) {
+    pointSummary.value = pointData
+    coupons.value = couponData.records
+  }
 }
 
 const addItem = () => {
@@ -117,7 +131,9 @@ onMounted(loadData)
       <el-table :data="list" border>
         <el-table-column prop="orderNo" label="订单号" min-width="170" />
         <el-table-column prop="customerName" label="客户" />
-        <el-table-column prop="totalAmount" label="金额" />
+        <el-table-column prop="originalAmount" label="原价" width="90" />
+        <el-table-column prop="discountAmount" label="优惠" width="90" />
+        <el-table-column prop="payableAmount" label="应付" width="90" />
         <el-table-column prop="payStatus" label="支付" />
         <el-table-column prop="orderStatus" label="状态" />
         <el-table-column label="操作" width="160">
@@ -143,6 +159,12 @@ onMounted(loadData)
     <el-drawer v-if="canWrite" v-model="drawerVisible" :title="form.id ? '编辑订单' : '新增订单'" size="560px">
       <el-form label-position="top">
         <el-form-item v-if="!isCustomerUser" label="客户"><el-input v-model="form.customerName" /></el-form-item>
+        <div v-if="isCustomerUser" class="list-box" style="margin-bottom: 16px;">
+          <div class="list-row">
+            <span>当前可用积分</span>
+            <strong>{{ pointSummary.currentPoints || 0 }}</strong>
+          </div>
+        </div>
         <el-form-item label="桌台">
           <el-select v-model="form.tableId" placeholder="选择桌台">
             <el-option v-for="item in tables" :key="item.id" :label="item.tableNo" :value="item.id" />
@@ -150,6 +172,19 @@ onMounted(loadData)
         </el-form-item>
         <el-form-item v-if="!isCustomerUser" label="支付"><el-input v-model="form.payStatus" /></el-form-item>
         <el-form-item v-if="!isCustomerUser" label="状态"><el-input v-model="form.orderStatus" /></el-form-item>
+        <el-form-item v-if="isCustomerUser" label="使用积分">
+          <el-input-number v-model="form.pointsUsed" :min="0" :max="pointSummary.currentPoints || 0" />
+        </el-form-item>
+        <el-form-item v-if="isCustomerUser" label="选择优惠券">
+          <el-select v-model="form.userCouponId" clearable placeholder="不使用优惠券">
+            <el-option
+              v-for="item in coupons"
+              :key="item.id"
+              :label="`${item.couponName} / 满${item.thresholdAmount}减${item.discountAmount}`"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
 
         <div class="list-box" style="margin-bottom: 14px;">
